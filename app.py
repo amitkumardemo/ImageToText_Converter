@@ -1,19 +1,11 @@
 import streamlit as st
 from PIL import Image
 import pytesseract
+import pyperclip
 import io
-import base64
-
-# Check if Tesseract is available
-try:
-    # If Tesseract is not installed or the path is incorrect, this line will raise an error
-    pytesseract.get_tesseract_version()
-except pytesseract.TesseractNotFoundError:
-    st.error("Tesseract OCR not found. Please ensure Tesseract is installed and the path is set correctly.")
-    st.stop()
 
 # Set the Tesseract executable path (for Windows users)
-pytesseract.pytesseract.tesseract_cmd = r'/usr/bin/tesseract'  # Adjust the path based on your cloud environment
+pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 # Set page configuration
 st.set_page_config(page_title="Image to Text Generator", layout="wide")
@@ -50,16 +42,11 @@ st.markdown("""
         padding: 10px;
     }
     
-    /* Button Styling */
-    .download-button {
-        display: inline-block;
-        padding: 10px 20px;
-        margin: 5px;
-        background-color: #0e76a8;
-        color: white;
-        text-decoration: none;
-        border-radius: 5px;
+    /* Icon styling */
+    .icon {
         cursor: pointer;
+        font-size: 20px;
+        color: #0e76a8;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -89,34 +76,40 @@ if choice == "Home":
     uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "png", "jpeg"])
 
     if uploaded_file is not None:
+        # Get the file name
+        file_name = uploaded_file.name
+
+        # Display the file name
+        st.write(f"Uploaded File: {file_name}")
+
         # Open the uploaded image
         image = Image.open(uploaded_file)
-        
-        # Display the uploaded image filename
-        st.write(f"Uploaded Image: `{uploaded_file.name}`")
-        
+
         # Extract text from the image using pytesseract
         st.write("Extracting text from image...")
         try:
             text = pytesseract.image_to_string(image)
-            # Display the extracted text
-            st.write("Extracted Text:")
-            
-            # Create a download link for the text
-            def create_download_link(text, filename="extracted_text.txt"):
-                b64 = base64.b64encode(text.encode()).decode()
-                return f'<a href="data:file/txt;base64,{b64}" download="{filename}" class="download-button">Download Text</a>'
-            
-            # Display the text area with a copy button
-            col1, col2 = st.columns([10, 2])
+
+            # Display the extracted text with icons
+            text_area_key = f"text_area_{file_name}"
+            col1, col2 = st.columns([8, 2])
             with col1:
-                st.text_area("Text from Image", text, height=400)
+                st.text_area("Text from Image", text, height=400, key=text_area_key)
             with col2:
-                st.markdown(create_download_link(text), unsafe_allow_html=True)
-                st.write(f'<a href="javascript:void(0);" onclick="navigator.clipboard.writeText(\'{text}\')" class="download-button">Copy Text</a>', unsafe_allow_html=True)
-                
-            # Display a message about data privacy
-            st.write("Your data is not stored. Don't worry, you are safe.")
+                # Copy button
+                if st.button("📋 Copy Text", key="copy_button"):
+                    pyperclip.copy(text)
+                    st.success("Text copied to clipboard!")
+
+                # Download button
+                if st.download_button(
+                    label="📥 Download Text",
+                    data=text,
+                    file_name="extracted_text.txt",
+                    mime="text/plain",
+                    key="download_button"
+                ):
+                    st.success("Text downloaded successfully!")
 
         except pytesseract.TesseractNotFoundError:
             st.error("Tesseract OCR not found. Please ensure Tesseract is installed and the path is set correctly.")
