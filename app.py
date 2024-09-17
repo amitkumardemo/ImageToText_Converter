@@ -2,10 +2,10 @@ import streamlit as st
 from PIL import Image
 import pytesseract
 import pyperclip
-import io
 
-# Set the Tesseract executable path (for Windows users)
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+# Set the Tesseract executable path (if necessary for Windows)
+# Uncomment and set the path if running on Windows
+# pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 # Set page configuration
 st.set_page_config(page_title="Image to Text Generator", layout="wide")
@@ -41,13 +41,6 @@ st.markdown("""
         text-align: center;
         padding: 10px;
     }
-    
-    /* Icon styling */
-    .icon {
-        cursor: pointer;
-        font-size: 20px;
-        color: #0e76a8;
-    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -76,43 +69,36 @@ if choice == "Home":
     uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "png", "jpeg"])
 
     if uploaded_file is not None:
-        # Get the file name
-        file_name = uploaded_file.name
-
-        # Display the file name
-        st.write(f"Uploaded File: {file_name}")
-
         # Open the uploaded image
         image = Image.open(uploaded_file)
+
+        # Display the file name instead of the full image
+        st.write(f"File name: {uploaded_file.name}")
+
+        # Display the uploaded image
+        st.image(image, caption='Uploaded Image', use_column_width=True)
 
         # Extract text from the image using pytesseract
         st.write("Extracting text from image...")
         try:
             text = pytesseract.image_to_string(image)
+            # Display the extracted text
+            st.write("Extracted Text:")
+            st.text_area("Text from Image", text, height=400, key="text_area")
 
-            # Display the extracted text with icons
-            text_area_key = f"text_area_{file_name}"
-            col1, col2 = st.columns([8, 2])
-            with col1:
-                st.text_area("Text from Image", text, height=400, key=text_area_key)
-            with col2:
-                # Copy button
-                if st.button("📋 Copy Text", key="copy_button"):
-                    pyperclip.copy(text)
-                    st.success("Text copied to clipboard!")
-
-                # Download button
-                if st.download_button(
-                    label="📥 Download Text",
-                    data=text,
-                    file_name="extracted_text.txt",
-                    mime="text/plain",
-                    key="download_button"
-                ):
-                    st.success("Text downloaded successfully!")
-
+            # Add copy and download functionality
+            st.markdown("""
+            <div style="text-align: right;">
+                <button onclick="navigator.clipboard.writeText(document.getElementById('text_area').value)">Copy</button>
+                <a href="data:text/plain;charset=utf-8," + encodeURIComponent(document.getElementById('text_area').value) download="extracted_text.txt">
+                    <button>Download</button>
+                </a>
+            </div>
+            """, unsafe_allow_html=True)
         except pytesseract.TesseractNotFoundError:
             st.error("Tesseract OCR not found. Please ensure Tesseract is installed and the path is set correctly.")
+
+        st.write("Your data is not stored. Don't worry, you are safe.")
 
 elif choice == "About":
     # About Page
