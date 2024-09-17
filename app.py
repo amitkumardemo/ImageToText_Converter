@@ -10,7 +10,7 @@ import pyperclip
 # Set page configuration
 st.set_page_config(page_title="Image to Text Generator", layout="wide")
 
-# Custom CSS for navbar and footer
+# Custom CSS for navbar, footer, and buttons
 st.markdown("""
     <style>
     /* Style for Navbar */
@@ -41,18 +41,35 @@ st.markdown("""
         text-align: center;
         padding: 10px;
     }
+
+    /* Button styling */
+    .icon-btn {
+        background-color: #0e76a8;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        cursor: pointer;
+        border-radius: 5px;
+        font-size: 14px;
+        margin-right: 5px;
+    }
+
+    .icon-btn:hover {
+        background-color: #575757;
+    }
     </style>
     """, unsafe_allow_html=True)
 
 # Logo
-st.image("https://via.placeholder.com/150", width=150)  # Placeholder logo (replace with your logo URL)
+st.image("jb.png", width=250)  # Placeholder logo (replace with your logo URL)
 
 # Navbar
 st.markdown("""
 <div class="navbar">
-  <a href="#home">Home</a>
-  <a href="#about">About</a>
-  <a href="https://github.com/your-repo" target="_blank">GitHub</a>
+  
+  <a href="#Home">Home</a>
+  <a href="#About">About</a>
+  <a href="https://techiehelpt.netlify.app/">BackToWebsite</a>
 </div>
 """, unsafe_allow_html=True)
 
@@ -73,28 +90,34 @@ if choice == "Home":
         image = Image.open(uploaded_file)
 
         # Display the file name instead of the full image
-        st.write(f"File name: {uploaded_file.name}")
-
-        # Display the uploaded image
-        st.image(image, caption='Uploaded Image', use_column_width=True)
+        st.write(f"File name: **{uploaded_file.name}**")
 
         # Extract text from the image using pytesseract
         st.write("Extracting text from image...")
         try:
             text = pytesseract.image_to_string(image)
-            # Display the extracted text
-            st.write("Extracted Text:")
-            st.text_area("Text from Image", text, height=400, key="text_area")
 
-            # Add copy and download functionality
-            st.markdown("""
-            <div style="text-align: right;">
-                <button onclick="navigator.clipboard.writeText(document.getElementById('text_area').value)">Copy</button>
-                <a href="data:text/plain;charset=utf-8," + encodeURIComponent(document.getElementById('text_area').value) download="extracted_text.txt">
-                    <button>Download</button>
-                </a>
-            </div>
-            """, unsafe_allow_html=True)
+            # Display the extracted text in a text area
+            text_area_key = "text_area"
+            st.text_area("Extracted Text", text, height=300, key=text_area_key)
+
+            # Add copy and download buttons
+            col1, col2 = st.columns([0.5, 0.5])
+            with col1:
+                if st.button("📋 Copy Text", key="copy_button"):
+                    pyperclip.copy(text)
+                    st.success("Text copied to clipboard!")
+
+            with col2:
+                if st.download_button(
+                    label="📥 Download Text",
+                    data=text,
+                    file_name="extracted_text.txt",
+                    mime="text/plain",
+                    key="download_button"
+                ):
+                    st.success("Text downloaded successfully!")
+
         except pytesseract.TesseractNotFoundError:
             st.error("Tesseract OCR not found. Please ensure Tesseract is installed and the path is set correctly.")
 
@@ -121,9 +144,9 @@ elif choice == "About":
 # Footer
 st.markdown("""
 <div class="footer">
-    <p>© 2024 Image to Text Generator | Developed by Your Name</p>
-    <a href="https://www.linkedin.com" style="color:white; margin-right: 10px;">LinkedIn</a>
-    <a href="https://www.twitter.com" style="color:white; margin-right: 10px;">Twitter</a>
-    <a href="https://github.com/your-repo" style="color:white;">GitHub</a>
+    <p>© 2024 Image to Text Generator | TechieHelp</p>
+    <a href="https://www.linkedin.com/in/techiehelp" style="color:white; margin-right: 10px;">LinkedIn</a>
+    <a href="https://www.twitter.com/techiehelp" style="color:white; margin-right: 10px;">Twitter</a>
+    <a href="https://www.instagram.com/techiehelp2" style="color:white;">Instagram</a>
 </div>
 """, unsafe_allow_html=True)
