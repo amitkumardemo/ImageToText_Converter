@@ -1,11 +1,6 @@
 import streamlit as st
 from PIL import Image
 import pytesseract
-import pyperclip
-
-# Set the Tesseract executable path (if necessary for Windows)
-# Uncomment and set the path if running on Windows
-# pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 # Set page configuration
 st.set_page_config(page_title="Image to Text Generator", layout="wide")
@@ -30,7 +25,7 @@ st.markdown("""
         background-color: #575757;
         color: white;
     }
-    
+
     /* Footer Styling */
     .footer {
         position: fixed;
@@ -66,7 +61,6 @@ st.image("jb.png", width=250)  # Placeholder logo (replace with your logo URL)
 # Navbar
 st.markdown("""
 <div class="navbar">
-  
   <a href="#Home">Home</a>
   <a href="#About">About</a>
   <a href="https://techiehelpt.netlify.app/">BackToWebsite</a>
@@ -98,23 +92,32 @@ if choice == "Home":
             text = pytesseract.image_to_string(image)
 
             # Display the extracted text in a text area
-            text_area_key = "text_area"
-            st.text_area("Extracted Text", text, height=300, key=text_area_key)
+            st.text_area("Extracted Text", text, height=300)
 
             # Add copy and download buttons
             col1, col2 = st.columns([0.5, 0.5])
             with col1:
-                if st.button("📋 Copy Text", key="copy_button"):
-                    pyperclip.copy(text)
-                    st.success("Text copied to clipboard!")
+                # Use JavaScript for copy to clipboard
+                copy_script = f"""
+                <button onclick="copyToClipboard()">📋 Copy Text</button>
+                <script>
+                function copyToClipboard() {{
+                    navigator.clipboard.writeText(`{text}`).then(function() {{
+                        alert('Text copied to clipboard!');
+                    }}, function(err) {{
+                        alert('Failed to copy text: ', err);
+                    }});
+                }}
+                </script>
+                """
+                st.markdown(copy_script, unsafe_allow_html=True)
 
             with col2:
                 if st.download_button(
                     label="📥 Download Text",
                     data=text,
                     file_name="extracted_text.txt",
-                    mime="text/plain",
-                    key="download_button"
+                    mime="text/plain"
                 ):
                     st.success("Text downloaded successfully!")
 
