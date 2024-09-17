@@ -1,6 +1,11 @@
 import streamlit as st
 from PIL import Image
 import pytesseract
+import streamlit.components.v1 as components
+
+# Set the Tesseract executable path (if necessary for Windows)
+# Uncomment and set the path if running on Windows
+# pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 # Set page configuration
 st.set_page_config(page_title="Image to Text Generator", layout="wide")
@@ -25,7 +30,7 @@ st.markdown("""
         background-color: #575757;
         color: white;
     }
-
+    
     /* Footer Styling */
     .footer {
         position: fixed;
@@ -83,7 +88,7 @@ if choice == "Home":
         # Open the uploaded image
         image = Image.open(uploaded_file)
 
-        # Display the file name instead of the full image
+        # Display the file name
         st.write(f"File name: **{uploaded_file.name}**")
 
         # Extract text from the image using pytesseract
@@ -92,34 +97,29 @@ if choice == "Home":
             text = pytesseract.image_to_string(image)
 
             # Display the extracted text in a text area
-            st.text_area("Extracted Text", text, height=300)
+            st.text_area("Extracted Text", text, height=300, key="text_area")
 
-            # Add copy and download buttons
-            col1, col2 = st.columns([0.5, 0.5])
-            with col1:
-                # Use JavaScript for copy to clipboard
-                copy_script = f"""
-                <button onclick="copyToClipboard()">📋 Copy Text</button>
-                <script>
-                function copyToClipboard() {{
-                    navigator.clipboard.writeText(`{text}`).then(function() {{
-                        alert('Text copied to clipboard!');
-                    }}, function(err) {{
-                        alert('Failed to copy text: ', err);
-                    }});
-                }}
-                </script>
-                """
-                st.markdown(copy_script, unsafe_allow_html=True)
+            # Add download button
+            st.download_button(
+                label="📥 Download Text",
+                data=text,
+                file_name="extracted_text.txt",
+                mime="text/plain",
+                key="download_button"
+            )
 
-            with col2:
-                if st.download_button(
-                    label="📥 Download Text",
-                    data=text,
-                    file_name="extracted_text.txt",
-                    mime="text/plain"
-                ):
-                    st.success("Text downloaded successfully!")
+            # Add copy button with JavaScript
+            components.html(f"""
+            <script>
+            function copyToClipboard() {{
+                const text = `{text.replace("`", "\\`")}`;
+                navigator.clipboard.writeText(text).then(() => {{
+                    alert('Text copied to clipboard!');
+                }});
+            }}
+            </script>
+            <button class="icon-btn" onclick="copyToClipboard()">📋 Copy Text</button>
+            """, height=50, scrolling=False)
 
         except pytesseract.TesseractNotFoundError:
             st.error("Tesseract OCR not found. Please ensure Tesseract is installed and the path is set correctly.")
